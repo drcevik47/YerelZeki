@@ -133,6 +133,51 @@ fun AgentChatScreen(
             )
         }
 
+        // Missing Model Warning Banner (When model file is missing)
+        if (modelStatus?.isReady == false) {
+            Surface(
+                color = AmberWarning.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(10.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, AmberWarning.copy(alpha = 0.5f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = AmberWarning,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Model Dosyası Yüklenmedi",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = AmberWarning
+                        )
+                        Text(
+                            text = "Gerçek on-device çıkarım için Gemma 3n model dosyasını yükleyin.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Button(
+                        onClick = { viewModel.setTab(com.example.ui.AppTab.SETTINGS) },
+                        colors = ButtonDefaults.buttonColors(containerColor = AmberWarning, contentColor = Color.Black),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text("Yükle", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
         // Messages Feed
         LazyColumn(
             state = listState,
