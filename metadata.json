@@ -1,0 +1,6 @@
+{
+  "name": "Gemma Agent",
+  "description": "Gemma 3n destekli otonom mobil yapay zeka agentı: dosya okuma, yazma, kodlama ve araç çalıştırma.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
