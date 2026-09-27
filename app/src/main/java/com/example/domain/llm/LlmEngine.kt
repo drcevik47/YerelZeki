@@ -1,21 +1,19 @@
 package com.example.domain.llm
 
 enum class ModelMode {
-    GEMMA_LOCAL_3N,
-    GEMINI_CLOUD
+    GEMMA_LOCAL_3N
 }
 
 data class ModelConfig(
-    val mode: ModelMode = ModelMode.GEMINI_CLOUD,
+    val mode: ModelMode = ModelMode.GEMMA_LOCAL_3N,
     val localModelPath: String = "",
-    val cloudModelName: String = "gemini-3.5-flash",
-    val temperature: Float = 0.4f,
+    val temperature: Float = 0.3f,
     val maxTokens: Int = 2048,
     val topP: Float = 0.95f
 )
 
 data class ModelStatus(
-    val mode: ModelMode,
+    val mode: ModelMode = ModelMode.GEMMA_LOCAL_3N,
     val isReady: Boolean,
     val modelName: String,
     val details: String,

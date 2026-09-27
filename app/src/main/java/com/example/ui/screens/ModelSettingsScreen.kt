@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.llm.GemmaLocalEngine
 import com.example.domain.llm.HardwareBackend
-import com.example.domain.llm.ModelMode
 import com.example.ui.AgentViewModel
 import com.example.ui.theme.*
 
@@ -46,12 +45,10 @@ fun ModelSettingsScreen(
 ) {
     val context = LocalContext.current
     val modelStatus by viewModel.modelStatus.collectAsState()
-    val modelMode by viewModel.modelMode.collectAsState()
     val currentHardwareBackend by viewModel.hardwareBackend.collectAsState()
     val importProgress by viewModel.modelImportProgress.collectAsState()
     val hwInfo = viewModel.hardwareInfo
 
-    var apiKeyInput by remember { mutableStateOf(viewModel.modelManager.getApiKey()) }
     var customPathInput by remember { mutableStateOf(viewModel.modelManager.getCustomModelPath()) }
 
     val modelPickerLauncher = rememberLauncherForActivityResult(
@@ -76,7 +73,7 @@ fun ModelSettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Model ve Donanım Hızlandırma",
+                        text = "Yerel Model & GPU/NPU Hızlandırma",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -101,6 +98,41 @@ fun ModelSettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Local Only Privacy & Security Notice Badge
+            Surface(
+                color = EmeraldSuccess.copy(alpha = 0.15f),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, EmeraldSuccess.copy(alpha = 0.5f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Security,
+                        contentDescription = null,
+                        tint = EmeraldSuccess,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Column {
+                        Text(
+                            text = "%100 Yerel ve Çevrimdışı (On-Device)",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = EmeraldSuccess
+                        )
+                        Text(
+                            text = "Uygulama yalnızca cihazınızdaki yerel yapay zeka modelini kullanır. Hiçbir veri veya kod bulut sunucularına gönderilmez.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 16.sp
+                        )
+                    }
+                }
+            }
+
             // Gemma 3n Kaggle Model Banner Card
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -438,77 +470,6 @@ fun ModelSettingsScreen(
                 }
             }
 
-            // Engine Mode Selection
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "Aktif LLM Motoru",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
-                            selected = modelMode == ModelMode.GEMMA_LOCAL_3N,
-                            onClick = { viewModel.setModelMode(ModelMode.GEMMA_LOCAL_3N) },
-                            label = { Text("Gemma 3n (Yerel)") },
-                            leadingIcon = {
-                                if (modelMode == ModelMode.GEMMA_LOCAL_3N) {
-                                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-                                }
-                            },
-                            modifier = Modifier.weight(1f).testTag("mode_gemma_local")
-                        )
-
-                        FilterChip(
-                            selected = modelMode == ModelMode.GEMINI_CLOUD,
-                            onClick = { viewModel.setModelMode(ModelMode.GEMINI_CLOUD) },
-                            label = { Text("Bulut API (Gemini)") },
-                            leadingIcon = {
-                                if (modelMode == ModelMode.GEMINI_CLOUD) {
-                                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-                                }
-                            },
-                            modifier = Modifier.weight(1f).testTag("mode_gemini_cloud")
-                        )
-                    }
-
-                    // Status readout
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(
-                                text = "Durum: ${modelStatus?.details ?: "Kontrol ediliyor..."}",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Medium
-                            )
-                            if (modelStatus?.localFilePath != null) {
-                                Text(
-                                    text = "Dosya Yolu: ${modelStatus?.localFilePath}",
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 11.sp,
-                                    color = EmeraldSuccess
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
             // Local File Path Configuration
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -548,49 +509,6 @@ fun ModelSettingsScreen(
                         modifier = Modifier.align(Alignment.End)
                     ) {
                         Text("Yolu Kaydet")
-                    }
-                }
-            }
-
-            // Cloud API Key (Dual-Engine Fallback)
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text(
-                        text = "Gemini API Anahtarı (Bulut & Yedek Motor)",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Text(
-                        text = "Yerel 2.4GB Gemma 3n modeli cihaza inene kadar agentik işlevleri kesintisiz kullanabilmek için Gemini API anahtarını buraya ekleyebilirsiniz:",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    OutlinedTextField(
-                        value = apiKeyInput,
-                        onValueChange = { apiKeyInput = it },
-                        placeholder = { Text("AIzaSy...") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Button(
-                        onClick = {
-                            viewModel.setApiKey(apiKeyInput.trim())
-                            Toast.makeText(context, "API Anahtarı kaydedildi", Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier.align(Alignment.End)
-                    ) {
-                        Text("Anahtarı Kaydet")
                     }
                 }
             }

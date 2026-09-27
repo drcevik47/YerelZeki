@@ -36,30 +36,11 @@ class ModelManager(private val context: Context) {
         localEngine.setHardwareBackend(backend)
     }
 
-    val remoteEngine = GeminiRemoteEngine(
-        modelName = prefs.getString("remote_model_name", "gemini-3.5-flash") ?: "gemini-3.5-flash",
-        apiKeyProvider = { getApiKey() }
-    )
-
-    private val _currentMode = MutableStateFlow(
-        try {
-            ModelMode.valueOf(prefs.getString("model_mode", ModelMode.GEMINI_CLOUD.name) ?: ModelMode.GEMINI_CLOUD.name)
-        } catch (_: Exception) {
-            ModelMode.GEMINI_CLOUD
-        }
-    )
+    private val _currentMode = MutableStateFlow(ModelMode.GEMMA_LOCAL_3N)
     val currentMode: StateFlow<ModelMode> = _currentMode.asStateFlow()
 
     private val _status = MutableStateFlow<ModelStatus?>(null)
     val status: StateFlow<ModelStatus?> = _status.asStateFlow()
-
-    fun getApiKey(): String {
-        return prefs.getString("gemini_api_key", "") ?: ""
-    }
-
-    fun setApiKey(key: String) {
-        prefs.edit().putString("gemini_api_key", key).apply()
-    }
 
     fun setCustomModelPath(path: String) {
         prefs.edit().putString("custom_model_path", path).apply()
@@ -71,33 +52,17 @@ class ModelManager(private val context: Context) {
     }
 
     fun setMode(mode: ModelMode) {
-        _currentMode.value = mode
-        prefs.edit().putString("model_mode", mode.name).apply()
+        _currentMode.value = ModelMode.GEMMA_LOCAL_3N
     }
 
     suspend fun refreshStatus(): ModelStatus {
-        val st = when (_currentMode.value) {
-            ModelMode.GEMMA_LOCAL_3N -> localEngine.getStatus()
-            ModelMode.GEMINI_CLOUD -> remoteEngine.getStatus()
-        }
+        val st = localEngine.getStatus()
         _status.value = st
         return st
     }
 
     suspend fun getActiveEngine(): LlmEngine {
-        val mode = _currentMode.value
-        return when (mode) {
-            ModelMode.GEMMA_LOCAL_3N -> {
-                if (localEngine.isAvailable()) {
-                    localEngine
-                } else if (remoteEngine.isAvailable()) {
-                    // Smart fallback with notification
-                    remoteEngine
-                } else {
-                    localEngine
-                }
-            }
-            ModelMode.GEMINI_CLOUD -> remoteEngine
-        }
+        // App runs strictly on local AI
+        return localEngine
     }
 }

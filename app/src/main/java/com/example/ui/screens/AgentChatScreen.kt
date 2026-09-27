@@ -83,14 +83,28 @@ fun AgentChatScreen(
                             .background(if (modelStatus?.isReady == true) EmeraldSuccess else AmberWarning)
                     )
                     Column {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text(
+                                text = "Gemma 3n On-Device",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Surface(
+                                color = EmeraldSuccess.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text(
+                                    text = "YEREL",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = EmeraldSuccess,
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
                         Text(
-                            text = modelStatus?.modelName ?: "Gemma 3n Agent",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = if (isRunning) "Agent Görev Yürütüyor..." else (modelStatus?.details ?: "Hazır"),
+                            text = if (isRunning) "Agent Görev Yürütüyor..." else (modelStatus?.details ?: "Telefonda Yerel Olarak Hazır"),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1

@@ -357,14 +357,7 @@ class AgentViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setModelMode(mode: ModelMode) {
-        modelManager.setMode(mode)
-        viewModelScope.launch {
-            modelManager.refreshStatus()
-        }
-    }
-
-    fun setApiKey(key: String) {
-        modelManager.setApiKey(key)
+        modelManager.setMode(ModelMode.GEMMA_LOCAL_3N)
         viewModelScope.launch {
             modelManager.refreshStatus()
         }
