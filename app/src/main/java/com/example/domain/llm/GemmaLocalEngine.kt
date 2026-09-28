@@ -156,8 +156,6 @@ class GemmaLocalEngine(
         val optionsBuilder = LlmInference.LlmInferenceOptions.builder()
             .setModelPath(modelFile.absolutePath)
             .setMaxTokens(2048)
-            .setTemperature(0.4f)
-            .setTopK(40)
 
         val newInstance = LlmInference.createFromOptions(context, optionsBuilder.build())
         activeLlmInference = newInstance
