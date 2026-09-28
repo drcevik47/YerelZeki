@@ -50,7 +50,9 @@ fun AgentChatScreen(
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size - 1)
+            try {
+                listState.animateScrollToItem(messages.size - 1)
+            } catch (_: Exception) {}
         }
     }
 
@@ -273,9 +275,6 @@ fun AgentChatScreen(
                         if (text.isNotEmpty() && !isRunning) {
                             inputPrompt = ""
                             viewModel.runGoal(text)
-                            coroutineScope.launch {
-                                listState.animateScrollToItem(messages.size)
-                            }
                         }
                     },
                     enabled = inputPrompt.isNotBlank() && !isRunning,

@@ -17,14 +17,6 @@ data class AgentSessionEntity(
 
 @Entity(
     tableName = "agent_messages",
-    foreignKeys = [
-        ForeignKey(
-            entity = AgentSessionEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["sessionId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ],
     indices = [Index("sessionId")]
 )
 data class AgentMessageEntity(
@@ -42,14 +34,6 @@ data class AgentMessageEntity(
 
 @Entity(
     tableName = "tool_executions",
-    foreignKeys = [
-        ForeignKey(
-            entity = AgentSessionEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["sessionId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ],
     indices = [Index("sessionId")]
 )
 data class ToolExecutionEntity(

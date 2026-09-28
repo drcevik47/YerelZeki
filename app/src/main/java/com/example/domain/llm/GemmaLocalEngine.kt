@@ -198,9 +198,11 @@ class GemmaLocalEngine(
 
                 // Clean turn tags if generated
                 response.replace("<end_of_turn>", "").trim()
-            } catch (e: Exception) {
-                "Yerel Gemma Çıkarım Hatası (MediaPipe GenAI): ${e.localizedMessage ?: e.message}\n" +
-                    "Model Dosyası: ${modelFile.absolutePath} (${modelFile.length() / (1024 * 1024)} MB)"
+            } catch (t: Throwable) {
+                closeEngine()
+                "Yerel Gemma Çıkarım Hatası (MediaPipe GenAI): ${t.localizedMessage ?: t.message ?: t.javaClass.simpleName}\n" +
+                    "Model Dosyası: ${modelFile.absolutePath} (${modelFile.length() / (1024 * 1024)} MB)\n\n" +
+                    "İpucu: Model dosyasının Kaggle MediaPipe formatı ile tam uyumlu olduğundan emin olun."
             }
         }
     }

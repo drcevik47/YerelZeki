@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase
         ToolExecutionEntity::class,
         WorkspaceProjectEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AgentDatabase : RoomDatabase() {

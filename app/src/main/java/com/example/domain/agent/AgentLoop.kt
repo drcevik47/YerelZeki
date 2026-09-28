@@ -95,8 +95,8 @@ ACTION: ```json
                         systemInstruction = systemPrompt,
                         stopSequences = listOf("OBSERVATION:", "GÖZLEM:")
                     )
-                } catch (e: Exception) {
-                    val err = "Model çalıştırma hatası: ${e.message}"
+                } catch (t: Throwable) {
+                    val err = "Model çalıştırma hatası: ${t.localizedMessage ?: t.message ?: t.javaClass.simpleName}"
                     _currentEvent.value = AgentStepEvent.Error(err)
                     agentDao.insertMessage(
                         AgentMessageEntity(
@@ -172,8 +172,8 @@ ACTION: ```json
                     break
                 }
             }
-        } catch (e: Exception) {
-            _currentEvent.value = AgentStepEvent.Error(e.message ?: "Bilinmeyen hata")
+        } catch (t: Throwable) {
+            _currentEvent.value = AgentStepEvent.Error(t.message ?: "Bilinmeyen hata")
         } finally {
             _isRunning.value = false
         }

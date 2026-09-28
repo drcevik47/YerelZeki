@@ -162,13 +162,32 @@ class AgentViewModel(application: Application) : AndroidViewModel(application) {
 
     fun runGoal(goal: String) {
         if (goal.isBlank() || isRunning.value) return
-        val sessionId = _activeSessionId.value
-        if (sessionId.isBlank()) return
 
         currentExecutionJob = viewModelScope.launch {
-            val engine = modelManager.getActiveEngine()
-            agentLoop.runGoal(sessionId, goal, engine)
-            refreshFiles()
+            try {
+                var sessionId = _activeSessionId.value
+                if (sessionId.isBlank()) {
+                    val newId = UUID.randomUUID().toString()
+                    val newSession = AgentSessionEntity(
+                        id = newId,
+                        title = goal.take(30)
+                    )
+                    dao.insertSession(newSession)
+                    _activeSessionId.value = newId
+                    sessionId = newId
+                } else {
+                    val existing = dao.getSessionById(sessionId)
+                    if (existing == null) {
+                        dao.insertSession(AgentSessionEntity(id = sessionId, title = goal.take(30)))
+                    }
+                }
+
+                val engine = modelManager.getActiveEngine()
+                agentLoop.runGoal(sessionId, goal, engine)
+                refreshFiles()
+            } catch (t: Throwable) {
+                android.util.Log.e("AgentViewModel", "runGoal failed", t)
+            }
         }
     }
 
