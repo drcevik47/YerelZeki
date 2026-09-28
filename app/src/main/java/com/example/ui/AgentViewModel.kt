@@ -314,11 +314,17 @@ class AgentViewModel(application: Application) : AndroidViewModel(application) {
                         modelManager.setCustomModelPath(modelFile.absolutePath)
                         modelManager.setMode(ModelMode.GEMMA_LOCAL_3N)
                         modelManager.refreshStatus()
+                        val isLitertlm = modelFile.name.endsWith(".litertlm", ignoreCase = true)
                         _modelImportProgress.value = ModelImportProgress(
                             isImporting = false,
-                            message = "Model başarıyla entegre edildi: ${modelFile.name} (${state.totalBytes / (1024 * 1024)} MB)",
+                            message = if (isLitertlm) {
+                                "⚠️ Seçilen dosya .litertlm formatındadır. MediaPipe TFLite motoru Kaggle'daki .bin/.task dosyasını gerektirir!"
+                            } else {
+                                "Model başarıyla entegre edildi: ${modelFile.name} (${state.totalBytes / (1024 * 1024)} MB)"
+                            },
                             percentage = 1f,
-                            isSuccess = true
+                            isSuccess = !isLitertlm,
+                            isError = isLitertlm
                         )
                     }
                     is ExtractionState.Error -> {
@@ -392,6 +398,20 @@ class AgentViewModel(application: Application) : AndroidViewModel(application) {
     fun refreshModelStatus() {
         viewModelScope.launch {
             modelManager.refreshStatus()
+        }
+    }
+
+    fun deleteInstalledModel() {
+        viewModelScope.launch {
+            val success = modelManager.deleteInstalledModel()
+            modelManager.refreshStatus()
+            _modelImportProgress.value = ModelImportProgress(
+                isImporting = false,
+                message = if (success) "Model dosyası ve önbellek başarıyla temizlendi." else "Model silinemedi.",
+                percentage = 1f,
+                isSuccess = success,
+                isError = !success
+            )
         }
     }
 }

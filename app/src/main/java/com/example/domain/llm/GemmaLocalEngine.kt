@@ -181,6 +181,24 @@ class GemmaLocalEngine(
                 "Gerçek model çıkarımı (on-device inference) yapabilmek için lütfen 'Gemma 3n' sekmesinden Kaggle model arşivini (.tar.gz) veya indirdiğiniz model dosyasını uygulamaya yükleyin.\n\n" +
                 "Kaggle Model: $KAGGLE_URL"
 
+        // Format check: .litertlm is a LiteRT-LM bundle, not a MediaPipe TFLite FlatBuffer bundle
+        if (modelFile.name.endsWith(".litertlm", ignoreCase = true)) {
+            return@withContext "⚠️ MODEL FORMATI UYUMSUZLUĞU (.litertlm)\n\n" +
+                "Yüklenen Model: ${modelFile.name} (${modelFile.length() / (1024 * 1024)} MB)\n\n" +
+                "📌 SORUNUN NEDENİ:\n" +
+                "Seçtiğiniz dosya yeni nesil 'LiteRT-LM' formatındadır (.litertlm).\n" +
+                "Android cihazlarda çalışan MediaPipe motoru ise Kaggle'daki 'TFLite' formatındaki (.bin veya .task) model dosyalarını çalıştırmaktadır. Dosya adı aynı görünse de iç yapısı farklı olduğu için TFLite 'modelError building tflite model' hatası vermektedir.\n\n" +
+                "🔧 NASIL DÜZELTİLİR?\n" +
+                "1. Kaggle model sayfasına gidin:\n" +
+                "   $KAGGLE_URL\n" +
+                "2. Sayfadaki 'Variation' (Framework) menüsünden 'LiteRT-LM' yerine mutlaka 'TFLite' seçeneğini seçin.\n" +
+                "3. İndirilen arşivin içindeki .bin veya .task dosyasını 'Gemma 3n' sekmesinden yükleyin.\n\n" +
+                "💡 Alternatif:\n" +
+                "Daha hızlı test etmek isterseniz resmi Gemma 2B TFLite modelini de (.bin) kullanabilirsiniz:\n" +
+                "https://www.kaggle.com/models/google/gemma/tfLite/\n\n" +
+                "Mevcut 4.2 GB dosyayı silip telefon hafızasını boşaltmak için 'Gemma 3n' sekmesindeki 'Modeli Kaldır / Sil' butonunu kullanabilirsiniz."
+        }
+
         inferenceMutex.withLock {
             try {
                 val inference = getOrCreateInference(modelFile)
@@ -198,9 +216,27 @@ class GemmaLocalEngine(
                 response.replace("<end_of_turn>", "").trim()
             } catch (t: Throwable) {
                 closeEngine()
-                "Yerel Gemma Çıkarım Hatası (MediaPipe GenAI): ${t.localizedMessage ?: t.message ?: t.javaClass.simpleName}\n" +
-                    "Model Dosyası: ${modelFile.absolutePath} (${modelFile.length() / (1024 * 1024)} MB)\n\n" +
-                    "İpucu: Model dosyasının Kaggle MediaPipe formatı ile tam uyumlu olduğundan emin olun."
+                val msg = t.localizedMessage ?: t.message ?: t.javaClass.simpleName
+                val isBuildingError = msg.contains("modelError building tflite model", ignoreCase = true) ||
+                    msg.contains("RET_CHECK failure", ignoreCase = true)
+
+                if (isBuildingError || modelFile.name.endsWith(".litertlm", ignoreCase = true)) {
+                    "⚠️ MODEL FORMATI UYUMSUZLUĞU: MediaPipe TFLite Gerekli\n\n" +
+                        "Model Dosyası: ${modelFile.name} (${modelFile.length() / (1024 * 1024)} MB)\n" +
+                        "Hata Kodu: $msg\n\n" +
+                        "📌 Bu hata dosyanın bozuk olduğunu değil, formatının MediaPipe ile uyumsuz olduğunu gösterir:\n" +
+                        "• İndirilen dosya LiteRT-LM formatındadır (.litertlm).\n" +
+                        "• MediaPipe GenAI motoru Kaggle'daki 'TFLite' varyantını (.bin veya .task) bekler.\n\n" +
+                        "🔧 ÇÖZÜM:\n" +
+                        "Kaggle üzerinde 'Variation' kısmından 'TFLite' seçerek indirin:\n" +
+                        "🔗 Gemma 3n (TFLite): $KAGGLE_URL\n" +
+                        "🔗 Gemma 2B (TFLite): https://www.kaggle.com/models/google/gemma/tfLite/\n\n" +
+                        "Gereksiz yer kaplayan mevcut dosyayı 'Gemma 3n' ayarlarından silebilirsiniz."
+                } else {
+                    "Yerel Gemma Çıkarım Hatası (MediaPipe GenAI): $msg\n" +
+                        "Model Dosyası: ${modelFile.absolutePath} (${modelFile.length() / (1024 * 1024)} MB)\n\n" +
+                        "İpucu: Model dosyasının Kaggle MediaPipe TFLite formatı ile uyumlu olduğundan emin olun."
+                }
             }
         }
     }

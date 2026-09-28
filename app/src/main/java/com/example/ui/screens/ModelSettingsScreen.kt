@@ -133,6 +133,85 @@ fun ModelSettingsScreen(
                 }
             }
 
+            // Incompatible .litertlm format warning card
+            val activeFilePath = modelStatus?.localFilePath ?: ""
+            val isLitertlmFormat = activeFilePath.endsWith(".litertlm", ignoreCase = true)
+
+            if (isLitertlmFormat) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = RoseError.copy(alpha = 0.12f)),
+                    shape = RoundedCornerShape(16.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, RoseError),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = RoseError,
+                                modifier = Modifier.size(26.dp)
+                            )
+                            Text(
+                                text = "Format Uyuşmazlığı: .litertlm Dosyası",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = RoseError
+                            )
+                        }
+
+                        Text(
+                            text = "Yüklü model: '${activeFilePath.substringAfterLast('/')}' (${modelStatus?.localFileSizeMb ?: 0} MB)\n\n" +
+                                "Bu dosya Kaggle üzerindeki yeni 'LiteRT-LM' formatındadır. Ancak Android MediaPipe motoru Kaggle'daki 'TFLite' formatını (.bin veya .task) gerektirir. Dosya yapısı farklı olduğundan 'modelError building tflite model' hatası alırsınız.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            lineHeight = 18.sp
+                        )
+
+                        Text(
+                            text = "✅ Çözüm: Kaggle'da 'Variation / Framework' kısmından 'TFLite' seçeneğini seçip indirin.",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = CyberCyan
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(GemmaLocalEngine.KAGGLE_URL))
+                                    context.startActivity(intent)
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = CyberCyan, contentColor = Color.Black)
+                            ) {
+                                Text("TFLite Modelini Aç", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    viewModel.deleteInstalledModel()
+                                    customPathInput = ""
+                                    Toast.makeText(context, "Uyumsuz model silindi", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = RoseError)
+                            ) {
+                                Text("Modeli Sil (Hafıza Boşalt)", fontSize = 11.sp)
+                            }
+                        }
+                    }
+                }
+            }
+
             // Gemma 3n Kaggle Model Banner Card
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -218,7 +297,36 @@ fun ModelSettingsScreen(
                         ) {
                             Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Kaggle'da Aç", fontSize = 12.sp)
+                            Text("Gemma 3n TFLite", fontSize = 11.sp)
+                        }
+                    }
+
+                    // Direct Gemma 2B TFLite alternative link
+                    OutlinedButton(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.kaggle.com/models/google/gemma/tfLite/"))
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(16.dp), tint = CyberCyan)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Alternatif: Hafif Gemma 2B TFLite (.bin) İndir (1.3 GB)", fontSize = 11.sp)
+                    }
+
+                    if (modelStatus?.localFilePath?.isNotBlank() == true) {
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.deleteInstalledModel()
+                                customPathInput = ""
+                                Toast.makeText(context, "Model dosyası silindi", Toast.LENGTH_SHORT).show()
+                            },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = RoseError),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.DeleteOutline, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Mevcut Modeli Cihazdan Sil (${modelStatus?.localFileSizeMb ?: 0} MB)", fontSize = 11.sp)
                         }
                     }
                 }

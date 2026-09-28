@@ -51,6 +51,24 @@ class ModelManager(private val context: Context) {
         return prefs.getString("custom_model_path", "") ?: ""
     }
 
+    fun deleteInstalledModel(): Boolean {
+        return try {
+            val file = localEngine.findModelFile()
+            if (file != null && file.exists()) {
+                file.delete()
+            }
+            // Clear all files in app models dir
+            val appModelsDir = java.io.File(context.filesDir, "models")
+            if (appModelsDir.exists() && appModelsDir.isDirectory) {
+                appModelsDir.listFiles()?.forEach { it.delete() }
+            }
+            setCustomModelPath("")
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     fun setMode(mode: ModelMode) {
         _currentMode.value = ModelMode.GEMMA_LOCAL_3N
     }
